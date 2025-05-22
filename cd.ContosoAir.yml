@@ -4,15 +4,15 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- none
 resources:
  pipelines:
   - pipeline: buildContosoAir # identifier for the resource used in pipeline resource variables
     source: Student1-51485198.ContosoAir # name of the pipeline that produces the artifact
     trigger:
-     branches:
-      include:
-       - master
+      branches:
+       include:
+        - master
 pool:
   name: default
   vmImage: ubuntu-latest
