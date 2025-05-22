@@ -1,0 +1,52 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+resources:
+ pipelines:
+  - pipeline: buildContosoAir # identifier for the resource used in pipeline resource variables
+    source: Student1-51485198.ContosoAir # name of the pipeline that produces the artifact
+    trigger:
+     branches:
+      include:
+       - master
+pool:
+  name: default
+  vmImage: ubuntu-latest
+
+steps:
+- task: DownloadBuildArtifacts@1
+  inputs:
+    buildType: 'specific'
+    project: '0d454f63-69a8-40eb-93d5-910cada95b31'
+    pipeline: '3'
+    buildVersionToDownload: 'latest'
+    downloadType: 'single'
+    downloadPath: '$(System.ArtifactsDirectory)'
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'Azure Connection'
+    subscriptionId: 'c1f90448-a667-4cd7-afa8-0cdd06649f15'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'rg-lod'
+    location: 'Canada East'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/drop/Templates/azuredeploy.json'
+    csmParametersFile: '$(Pipeline.Workspace)/drop/Templates/azuredeploy.parameters.json'
+    overrideParameters: '-p_environment $(web_environment) -p_site_prefix $(web_prefix) -p_site_web_name $(web_site)'
+    deploymentMode: 'Incremental'
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
+- task: AzureRmWebAppDeployment@5
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure Connection'
+    appType: 'webApp'
+    WebAppName: '$(web_prefix)-$(web_site)-$(web_environment)'
+    packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
